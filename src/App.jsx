@@ -5,6 +5,7 @@ import ColorDisplay from './components/ColorDisplay'
 import Header from './components/Header'
 import { hexToRgb, getContrastColor, getComplementaryColor } from './utils/colorUtils'
 import './index.css';
+import ColorWheel from './components/ColorWheel';
 
 function App() {
   // State management
@@ -235,7 +236,7 @@ function App() {
               console.log('Toggle panel clicked, current state:', showPanel);
               setShowPanel(prevState => !prevState);
             }}
-            className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-xl hover:shadow-2xl transition-shadow relative overflow-hidden"
+            className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-xl hover:shadow-2xl transition-shadow relative overflow-hidden z-30"
             aria-label={showPanel ? "Close color panel" : "Open color panel"}
           >
             <motion.div
@@ -254,13 +255,11 @@ function App() {
               className="relative z-10"
             >
               {showPanel ? (
-                // X icon when panel is open
                 <>
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </>
               ) : (
-                // Question mark icon when panel is closed
                 <>
                   <circle cx="12" cy="12" r="10"></circle>
                   <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>

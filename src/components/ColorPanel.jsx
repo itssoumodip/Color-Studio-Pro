@@ -168,190 +168,311 @@ export default function ColorPanel({
               exit={{ opacity: 0, y: -10 }}
               className="flex flex-col items-center space-y-8"
             >
-              <div className="relative">
-                {/* Color wheel */}
-                <motion.div 
-                  ref={wheelRef}
-                  className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full shadow-lg border border-white/20 dark:border-black/20"
-                  style={{
-                    background: `conic-gradient(
-                      hsl(0, 100%, 50%),
-                      hsl(60, 100%, 50%),
-                      hsl(120, 100%, 50%),
-                      hsl(180, 100%, 50%),
-                      hsl(240, 100%, 50%),
-                      hsl(300, 100%, 50%),
-                      hsl(360, 100%, 50%)
-                    )`
-                  }}
-                  onMouseDown={(e) => {
-                    handleWheelInteraction(e);
-                    
-                    const handleMouseMove = (moveEvent) => {
-                      handleWheelInteraction(moveEvent);
-                    };
-                    
-                    const handleMouseUp = () => {
-                      document.removeEventListener('mousemove', handleMouseMove);
-                      document.removeEventListener('mouseup', handleMouseUp);
-                    };
-                    
-                    document.addEventListener('mousemove', handleMouseMove);
-                    document.addEventListener('mouseup', handleMouseUp);
-                  }}
-                  onTouchStart={(e) => {
-                    handleWheelInteraction(e);
-                    
-                    const handleTouchMove = (moveEvent) => {
-                      handleWheelInteraction(moveEvent);
-                    };
-                    
-                    const handleTouchEnd = () => {
-                      document.removeEventListener('touchmove', handleTouchMove);
-                      document.removeEventListener('touchend', handleTouchEnd);
-                    };
-                    
-                    document.addEventListener('touchmove', handleTouchMove);
-                    document.addEventListener('touchend', handleTouchEnd);
-                  }}
-                >
-                  {/* White overlay to create saturation gradient */}
-                  <div className="absolute inset-0 rounded-full"
-                    style={{
-                      background: 'radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)'
-                    }}
-                  ></div>
-                  
-                  {/* Center white point */}
-                  <div className="absolute w-4 h-4 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80 shadow-sm pointer-events-none"></div>
-                  
-                  {/* Selected color indicator */}
-                  <motion.div
-                    layout
-                    className="absolute w-7 h-7 rounded-full border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2"
-                    style={{
-                      backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
-                      left: `${50 + Math.cos((hue * Math.PI) / 180) * (saturation / 100) * 50}%`,
-                      top: `${50 + Math.sin((hue * Math.PI) / 180) * (saturation / 100) * 50}%`
-                    }}
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      transition: { duration: 0.5, repeat: Infinity, repeatDelay: 2 }
-                    }}
-                  ></motion.div>
-                </motion.div>
-                
-                {/* Preview of current color */}
-                <motion.div 
-                  className="absolute -top-4 -right-4 w-14 h-14 rounded-xl shadow-lg border-2 border-white"
-                  style={{ backgroundColor: color }}
-                  animate={{ rotate: [0, 5, -5, 0], transition: { duration: 2, repeat: Infinity } }}
+              <div className="relative w-full flex justify-center">
+                <ColorWheel 
+                  color={color} 
+                  onChange={(newColor) => {
+                    setColor(newColor);
+                    handleColorChange(newColor);
+                  }} 
                 />
-              </div>
-              
-              {/* Lightness slider */}
-              <div className="w-full max-w-md">
-                <div className="flex justify-between mb-2">
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    Lightness
-                  </label>
-                  <span className="text-sm font-mono font-bold text-gray-900 dark:text-white">
-                    {Math.round(lightness)}%
-                  </span>
-                </div>
-                <div className="h-5 relative w-full rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-                  {/* Gradient background */}
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background: `linear-gradient(to right, 
-                        hsl(${hue}, ${saturation}%, 0%), 
-                        hsl(${hue}, ${saturation}%, 50%), 
-                        hsl(${hue}, ${saturation}%, 100%)
-                      )`
-                    }}
-                  ></div>
-                  
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={lightness}
-                    onChange={(e) => {
-                      const newLightness = parseInt(e.target.value);
-                      setLightness(newLightness);
-                      updateColorFromWheel(hue, saturation, newLightness);
-                    }}
-                    className="w-full h-full opacity-0 cursor-pointer relative z-10"
-                  />
-                  
-                  {/* Slider thumb */}
-                  <div 
-                    className="absolute w-5 h-5 rounded-full bg-white border-2 border-gray-300 shadow-md top-1/2 transform -translate-y-1/2 z-10 pointer-events-none"
-                    style={{ left: `${lightness}%`, transform: 'translate(-50%, -50%)' }}
-                  />
-                </div>
-              </div>
-              
-              {/* HSL values with modern cards */}
-              <div className="grid grid-cols-3 gap-3 w-full">
+                
                 <motion.div 
-                  whileHover={{ scale: 1.03 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200 dark:border-gray-700"
+                  className="absolute -top-4 -right-4 w-16 h-16 rounded-2xl shadow-xl border-2 border-white/80 backdrop-filter backdrop-blur-sm"
+                  style={{ backgroundColor: color }}
+                  animate={{ 
+                    rotate: [0, 5, -5, 0], 
+                    boxShadow: [
+                      '0 8px 20px rgba(0, 0, 0, 0.15)',
+                      '0 8px 25px rgba(0, 0, 0, 0.2)',
+                      '0 8px 20px rgba(0, 0, 0, 0.15)'
+                    ]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                />
+                
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 translate-y-full bg-white dark:bg-gray-800 px-3 py-1 rounded-md shadow-md z-20 flex items-center space-x-2 border border-gray-100 dark:border-gray-700"
                 >
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Hue</div>
-                  <div className="text-xl font-mono font-bold text-gray-900 dark:text-white flex items-baseline">
-                    {Math.round(hue)}
-                    <span className="text-xs ml-1 text-gray-500">°</span>
-                  </div>
-                  <div className="mt-2 h-1 bg-gradient-to-r from-red-500 via-green-500 to-blue-500 rounded-full" />
-                </motion.div>
-                <motion.div 
-                  whileHover={{ scale: 1.03 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200 dark:border-gray-700"
-                >
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Saturation</div>
-                  <div className="text-xl font-mono font-bold text-gray-900 dark:text-white flex items-baseline">
-                    {Math.round(saturation)}
-                    <span className="text-xs ml-1 text-gray-500">%</span>
-                  </div>
-                  <div className="mt-2 h-1 bg-gradient-to-r from-gray-300 to-blue-500 rounded-full" />
-                </motion.div>
-                <motion.div 
-                  whileHover={{ scale: 1.03 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200 dark:border-gray-700"
-                >
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Lightness</div>
-                  <div className="text-xl font-mono font-bold text-gray-900 dark:text-white flex items-baseline">
-                    {Math.round(lightness)}
-                    <span className="text-xs ml-1 text-gray-500">%</span>
-                  </div>
-                  <div className="mt-2 h-1 bg-gradient-to-r from-black via-gray-500 to-white rounded-full" />
+                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }}></div>
+                  <span className="font-mono text-xs">{color.toUpperCase()}</span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(color)}
+                    className="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                  </button>
                 </motion.div>
               </div>
-              
-              {/* Suggestion colors based on current selection */}
-              <div className="w-full">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Suggestions</h3>
-                <div className="grid grid-cols-5 gap-3">
-                  {[0.8, 0.6, 0.4, 0.2, 0.1].map((factor) => {
-                    const suggestedHex = hslToHex(hue, saturation / 100, factor);
-                    return (
-                      <motion.button
-                        key={factor}
-                        whileHover={{ scale: 1.1, y: -3 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setColor(suggestedHex)}
-                        onMouseEnter={(e) => handleShowTooltip(suggestedHex, e)}
-                        onMouseLeave={() => setShowTooltip(false)}
-                        className="aspect-square rounded-xl shadow-md border-2 transition-all overflow-hidden"
-                        style={{ 
-                          backgroundColor: suggestedHex,
-                          borderColor: suggestedHex === color ? 'white' : 'transparent'
+
+              {/* HSL controls and color suggestions */}
+              <div className="w-full max-w-md space-y-6">
+                {/* HSL values with modern cards */}
+                <div className="grid grid-cols-3 gap-3 w-full">
+                  <motion.div 
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl p-4 shadow-md border border-white/20 dark:border-gray-700/50 relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent pointer-events-none"></div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Hue</div>
+                    <div className="text-2xl font-mono font-bold text-gray-900 dark:text-white flex items-baseline">
+                      {Math.round(hue)}
+                      <span className="text-xs ml-1 text-gray-500">°</span>
+                    </div>
+                    <div className="mt-3 h-1.5 bg-gradient-to-r from-red-500 via-green-500 to-blue-500 rounded-full" />
+                    <div className="mt-2 flex justify-between">
+                      <button 
+                        onClick={() => {
+                          const newHue = (hue - 5 + 360) % 360;
+                          setHue(newHue);
+                          updateColorFromWheel(newHue, saturation, lightness);
                         }}
-                      />
-                    );
-                  })}
+                        className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5"></path>
+                        </svg>
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const newHue = (hue + 5) % 360;
+                          setHue(newHue);
+                          updateColorFromWheel(newHue, saturation, lightness);
+                        }}
+                        className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 5v14M5 12h14"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl p-4 shadow-md border border-white/20 dark:border-gray-700/50 relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent pointer-events-none"></div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Saturation</div>
+                    <div className="text-2xl font-mono font-bold text-gray-900 dark:text-white flex items-baseline">
+                      {Math.round(saturation)}
+                      <span className="text-xs ml-1 text-gray-500">%</span>
+                    </div>
+                    <div className="mt-3 h-1.5 bg-gradient-to-r from-gray-300 to-blue-500 rounded-full" />
+                    <div className="mt-2 flex justify-between">
+                      <button 
+                        onClick={() => {
+                          const newSaturation = Math.max(0, saturation - 5);
+                          setSaturation(newSaturation);
+                          updateColorFromWheel(hue, newSaturation, lightness);
+                        }}
+                        className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5"></path>
+                        </svg>
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const newSaturation = Math.min(100, saturation + 5);
+                          setSaturation(newSaturation);
+                          updateColorFromWheel(hue, newSaturation, lightness);
+                        }}
+                        className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 5v14M5 12h14"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl p-4 shadow-md border border-white/20 dark:border-gray-700/50 relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent pointer-events-none"></div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Lightness</div>
+                    <div className="text-2xl font-mono font-bold text-gray-900 dark:text-white flex items-baseline">
+                      {Math.round(lightness)}
+                      <span className="text-xs ml-1 text-gray-500">%</span>
+                    </div>
+                    <div className="mt-3 h-1.5 bg-gradient-to-r from-black via-gray-500 to-white rounded-full" />
+                    <div className="mt-2 flex justify-between">
+                      <button 
+                        onClick={() => {
+                          const newLightness = Math.max(0, lightness - 5);
+                          setLightness(newLightness);
+                          updateColorFromWheel(hue, saturation, newLightness);
+                        }}
+                        className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5"></path>
+                        </svg>
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const newLightness = Math.min(100, lightness + 5);
+                          setLightness(newLightness);
+                          updateColorFromWheel(hue, saturation, newLightness);
+                        }}
+                        className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 5v14M5 12h14"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Lightness slider */}
+                <div className="w-full max-w-md">
+                  <div className="flex justify-between mb-2">
+                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                      </svg>
+                      <span>Brightness</span>
+                    </label>
+                    <span className="text-sm font-mono font-bold text-gray-900 dark:text-white px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-md">
+                      {Math.round(lightness)}%
+                    </span>
+                  </div>
+                  
+                  <div className="h-6 relative w-full rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700 p-1">
+                    {/* Gradient background */}
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background: `linear-gradient(to right, 
+                          hsl(${hue}, ${saturation}%, 0%), 
+                          hsl(${hue}, ${saturation}%, 50%), 
+                          hsl(${hue}, ${saturation}%, 100%)
+                        )`
+                      }}
+                    ></div>
+                    
+                    {/* Decorative tick marks */}
+                    <div className="absolute inset-y-0 left-1/4 w-px h-full bg-white/20 pointer-events-none"></div>
+                    <div className="absolute inset-y-0 left-1/2 w-px h-full bg-white/30 pointer-events-none"></div>
+                    <div className="absolute inset-y-0 left-3/4 w-px h-full bg-white/20 pointer-events-none"></div>
+                    
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={lightness}
+                      onChange={(e) => {
+                        const newLightness = parseInt(e.target.value);
+                        setLightness(newLightness);
+                        updateColorFromWheel(hue, saturation, newLightness);
+                      }}
+                      className="w-full h-full opacity-0 cursor-pointer relative z-10"
+                    />
+                    
+                    {/* Slider thumb */}
+                    <motion.div 
+                      className="absolute w-6 h-6 rounded-full bg-white shadow-lg top-1/2 transform -translate-y-1/2 z-10 pointer-events-none flex items-center justify-center"
+                      style={{ 
+                        left: `${lightness}%`, 
+                        transform: 'translate(-50%, -50%)' 
+                      }}
+                      animate={{
+                        boxShadow: [
+                          '0 0 0 2px rgba(255,255,255,0.5)', 
+                          '0 0 0 4px rgba(255,255,255,0.2)', 
+                          '0 0 0 2px rgba(255,255,255,0.5)'
+                        ]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                    </motion.div>
+                  </div>
+                  
+                  <div className="flex justify-between mt-1 text-xs text-gray-500">
+                    <span>0%</                    <span>50%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+
+                {/* Suggestion colors based on current selection */}
+                <div className="w-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Suggestions</h3>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        const randomHue = Math.floor(Math.random() * 360);
+                        setHue(randomHue);
+                        updateColorFromWheel(randomHue, saturation, lightness);
+                      }}
+                      className="flex items-center space-x-1 px-3 py-1 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm rounded-full text-xs shadow-sm"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M7 22V11M17 22V11M2 8l10-5 10 5M2 13h20"></path>
+                      </svg>
+                      <span>Random</span>
+                    </motion.button>
+                  </div>
+
+                  <div className="grid grid-cols-5 gap-3">
+                    {[0.8, 0.6, 0.4, 0.2, 0.1].map((factor, index) => {
+                      const suggestedHex = hslToHex(hue, saturation / 100, factor);
+                      return (
+                        <motion.div
+                          key={factor}
+                          whileHover={{ 
+                            scale: 1.1, 
+                            y: -5,
+                            boxShadow: "0 12px 25px -5px rgba(0, 0, 0, 0.15)"
+                          }}
+                          className="relative"
+                        >
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setColor(suggestedHex)}
+                            onMouseEnter={(e) => handleShowTooltip(suggestedHex, e)}
+                            onMouseLeave={() => setShowTooltip(false)}
+                            className="w-full aspect-square rounded-xl shadow-md border-2 transition-all overflow-hidden relative"
+                            style={{ 
+                              backgroundColor: suggestedHex,
+                              borderColor: suggestedHex === color ? 'white' : 'transparent'
+                            }}
+                            aria-label={`Use suggested color ${index + 1}`}
+                          >
+                            {suggestedHex === color && (
+                              <motion.div 
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute inset-0 flex items-center justify-center"
+                              >
+                                <div className="w-2 h-2 rounded-full bg-white/80"></div>
+                              </motion.div>
+                            )}
+                          </motion.button>
+                          <motion.div 
+                            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-900 text-[10px] px-1.5 py-0.5 rounded-full shadow-sm font-mono opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ opacity: suggestedHex === color ? 0.7 : 0 }}
+                            animate={{ opacity: suggestedHex === color ? 0.7 : 0 }}
+                          >
+                            {Math.round(factor * 100)}%
+                          </motion.div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </motion.div>

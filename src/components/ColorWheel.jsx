@@ -1,27 +1,57 @@
-import { useRef, useEffect } from 'react';
-import { hexToRgb } from '../utils/colorUtils';
+import { useRef, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 
 export default function ColorWheel({ color, onChange }) {
   const canvasRef = useRef(null);
-  const wheelSize = 200;
+  const wrapperRef = useRef(null);
+  const [wheelSize, setWheelSize] = useState(280);
+  const [isDragging, setIsDragging] = useState(false);
   const radius = wheelSize / 2;
+  const [colorMarker, setColorMarker] = useState({ x: 0, y: 0, visible: false });
   
-  // Draw color wheel
+  // Resize wheel on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (wrapperRef.current) {
+        const parent = wrapperRef.current.parentElement;
+        if (parent) {
+          const size = Math.min(parent.clientWidth, parent.clientHeight) * 0.9;
+          setWheelSize(Math.max(size, 200)); // Set a minimum size
+        }
+      }
+    };
+    
+    handleResize(); // Initial size
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  // Draw color wheel and update marker position
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    
+    // Set canvas size explicitly
+    canvas.width = wheelSize;
+    canvas.height = wheelSize;
     
     // Clear canvas
     ctx.clearRect(0, 0, wheelSize, wheelSize);
     
-    // Draw color wheel
-    for (let angle = 0; angle < 360; angle++) {
-      const startAngle = (angle - 1) * Math.PI / 180;
-      const endAngle = (angle + 1) * Math.PI / 180;
+    // Draw color wheel with smoother gradient
+    const centerX = radius;
+    const centerY = radius;
+
+    // Draw outer color wheel (hue)
+    for (let angle = 0; angle < 360; angle += 0.5) {
+      const startAngle = (angle - 0.5) * Math.PI / 180;
+      const endAngle = (angle + 0.5) * Math.PI / 180;
       
       ctx.beginPath();
-      ctx.moveTo(radius, radius);
-      ctx.arc(radius, radius, radius, startAngle, endAngle);
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius - 1, startAngle, endAngle);
       ctx.closePath();
       
       const hue = angle;
@@ -29,89 +59,224 @@ export default function ColorWheel({ color, onChange }) {
       ctx.fill();
     }
     
-    // Draw inner white to black gradient
-    const innerRadius = radius * 0.7;
-    for (let r = 0; r <= innerRadius; r++) {
-      const gradientPosition = r / innerRadius;
-      const brightness = 100 - gradientPosition * 100; // 100% to 0%
-      
+    // Create saturation gradient (white to transparent)
+    const saturationGradient = ctx.createRadialGradient(
+      centerX, centerY, 0,
+      centerX, centerY, radius - 1
+    );
+    saturationGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    saturationGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.8)');
+    saturationGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
+    saturationGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    
+    ctx.fillStyle = saturationGradient;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius - 1, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw concentric circles for reference
+    for (let r = radius * 0.33; r < radius; r += radius * 0.33) {
       ctx.beginPath();
-      ctx.arc(radius, radius, innerRadius - r, 0, 2 * Math.PI);
+      ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.lineWidth = 1;
-      ctx.strokeStyle = `hsl(0, 0%, ${brightness}%)`;
       ctx.stroke();
     }
     
-    // Draw color marker
-    const { r, g, b } = hexToRgb(color);
-    // Convert RGB to HSL to find position on wheel
-    const hsl = rgbToHsl(r, g, b);
+    // Update color marker position based on the current color
+    updateColorMarker(color);
     
-    // Draw marker at position
-    if (hsl.s > 0) {
-      const angle = hsl.h * Math.PI / 180;
-      const distance = hsl.s * radius;
-      
-      const x = radius + Math.cos(angle) * distance;
-      const y = radius + Math.sin(angle) * distance;
-      
-      ctx.beginPath();
-      ctx.arc(x, y, 8, 0, 2 * Math.PI);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#ffffff';
-      ctx.stroke();
-    }
-    
-  }, [color]);
+  }, [wheelSize, color]);
   
-  const handleClick = (e) => {
+  // Update color marker position from hex color
+  const updateColorMarker = (hexColor) => {
+    try {
+      const rgb = hexToRgb(hexColor);
+      // Convert RGB to HSL to find position on wheel
+      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+      
+      // Calculate marker position
+      if (hsl.s > 0) {
+        const angle = hsl.h * Math.PI / 180;
+        const distance = hsl.s * (radius - 5); // Adjust for marker size
+        
+        const x = radius + Math.cos(angle) * distance;
+        const y = radius + Math.sin(angle) * distance;
+        
+        setColorMarker({ x, y, visible: true });
+      } else {
+        // For grayscale colors, place marker in center
+        setColorMarker({ x: radius, y: radius, visible: true });
+      }
+    } catch (error) {
+      console.error("Error updating color marker:", error);
+      setColorMarker({ x: radius, y: radius, visible: false });
+    }
+  };
+  
+  // Handle mouse and touch interactions
+  const handleInteraction = (e) => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    
+    // Get mouse/touch position
+    let clientX, clientY;
+    if (e.type.includes('touch')) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    // Calculate position relative to canvas
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     
     // Calculate distance from center
     const dx = x - radius;
     const dy = y - radius;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
+    // Only process if inside the wheel
     if (distance <= radius) {
       // Calculate angle (hue)
       let angle = Math.atan2(dy, dx) * 180 / Math.PI;
       if (angle < 0) angle += 360;
       
-      // Calculate saturation
-      const saturation = distance / radius;
+      // Calculate saturation (normalized distance from center)
+      const saturation = Math.min(distance / (radius - 5), 1);
       
-      // Calculate lightness based on distance from center
-      let lightness = 0.5;
-      if (distance < radius * 0.7) {
-        // Inside the inner circle
-        lightness = 0.5 * (1 - distance / (radius * 0.7));
-      }
+      // Default to 50% lightness for a vibrant color wheel
+      const lightness = 0.5;
       
       // Convert HSL to RGB
       const rgb = hslToRgb(angle, saturation, lightness);
       
       // Convert RGB to HEX
-      const hex = `#${rgb.r.toString(16).padStart(2, '0')}${rgb.g.toString(16).padStart(2, '0')}${rgb.b.toString(16).padStart(2, '0')}`;
+      const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
       
+      // Update the marker position
+      setColorMarker({ x, y, visible: true });
+      
+      // Call the onChange handler with the new color
       onChange(hex);
     }
   };
   
+  // Event handlers
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+    handleInteraction(e);
+    
+    // Add event listeners for drag
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+  
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      handleInteraction(e);
+    }
+  };
+  
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+  
+  const handleTouchStart = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+    handleInteraction(e);
+  };
+  
+  const handleTouchMove = (e) => {
+    if (isDragging) {
+      handleInteraction(e);
+    }
+  };
+  
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+  
   return (
-    <canvas 
-      ref={canvasRef} 
-      width={wheelSize} 
-      height={wheelSize} 
-      className="cursor-pointer rounded-full shadow-lg"
-      onClick={handleClick}
-    />
+    <div 
+      ref={wrapperRef} 
+      className="relative flex items-center justify-center"
+    >
+      <canvas 
+        ref={canvasRef} 
+        width={wheelSize} 
+        height={wheelSize} 
+        className={`rounded-full shadow-lg cursor-pointer ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        onClick={handleInteraction}
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      />
+      
+      {colorMarker.visible && (
+        <motion.div 
+          className="absolute pointer-events-none w-6 h-6 rounded-full border-2 border-white shadow-lg z-10"
+          style={{ 
+            backgroundColor: color,
+            left: colorMarker.x,
+            top: colorMarker.y,
+            transform: 'translate(-50%, -50%)',
+          }}
+          initial={{ scale: 0.8 }}
+          animate={{ 
+            scale: 1,
+            boxShadow: isDragging 
+              ? '0 0 0 4px rgba(255,255,255,0.3)' 
+              : '0 0 0 2px rgba(255,255,255,0.2)'
+          }}
+          transition={{ duration: 0.2 }}
+        >
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{
+              boxShadow: [
+                '0 0 0 2px rgba(255,255,255,0.7)', 
+                '0 0 0 4px rgba(255,255,255,0.3)', 
+                '0 0 0 2px rgba(255,255,255,0.7)'
+              ]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        </motion.div>
+      )}
+      
+      <div className="absolute inset-0 rounded-full border border-white/10 pointer-events-none"></div>
+    </div>
   );
 }
 
-// Helper functions
+// Helper functions for color conversion
+function hexToRgb(hex) {
+  // Remove # if present
+  hex = hex.replace(/^#/, '');
+  
+  // Convert shorthand hex to full form
+  if (hex.length === 3) {
+    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+  }
+  
+  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 0, g: 0, b: 0 };
+}
+
 function rgbToHsl(r, g, b) {
   r /= 255;
   g /= 255;
@@ -131,6 +296,7 @@ function rgbToHsl(r, g, b) {
       case r: h = (g - b) / d + (g < b ? 6 : 0); break;
       case g: h = (b - r) / d + 2; break;
       case b: h = (r - g) / d + 4; break;
+      default: h = 0;
     }
     
     h *= 60;
@@ -158,8 +324,8 @@ function hslToRgb(h, s, l) {
     const p = 2 * l - q;
     
     r = hue2rgb(p, q, (h / 360 + 1/3) % 1);
-    g = hue2rgb(p, q, h / 360);
-    b = hue2rgb(p, q, (h / 360 - 1/3) % 1);
+    g = hue2rgb(p, q, h / 360 % 1);
+    b = hue2rgb(p, q, (h / 360 - 1/3 + 1) % 1);
   }
   
   return {
@@ -167,4 +333,13 @@ function hslToRgb(h, s, l) {
     g: Math.round(g * 255),
     b: Math.round(b * 255)
   };
+}
+
+function componentToHex(c) {
+  const hex = c.toString(16);
+  return hex.length === 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(r, g, b) {
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
