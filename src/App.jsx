@@ -185,21 +185,6 @@ function App() {
               </motion.div>
             )}
           </AnimatePresence>
-          
-          {/* Color info button */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setShowInfo(!showInfo)}
-            className="p-3 rounded-full bg-white/10 backdrop-blur-md shadow-lg hover:bg-white/20 transition-colors"
-            style={{ color: textColor }}
-            aria-label="Show color information"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 16v-4M12 8h.01"></path>
-            </svg>
-          </motion.button>         
-          
           {/* Panel toggle button - improved for visibility */}
           <motion.button
             whileTap={{ scale: 0.9 }}

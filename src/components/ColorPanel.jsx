@@ -2,6 +2,60 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ColorWheel from './ColorWheel';
 
+// Add this at the to p of your file, above the ColorPanel component
+function Navbar({ setShowPanel, color, activeTab, setActiveTab }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  const toggleMenu = () => {
+    console.log("Toggle menu clicked. Current state:", isMenuOpen);
+    setIsMenuOpen(!isMenuOpen);
+  };
+                 
+  return (
+    <>
+     
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+          >
+            <nav className="p-4 space-y-3">
+              {['wheel', 'colors', 'history', 'favorites'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    setIsMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-colors ${
+                    activeTab === tab
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <span className="capitalize">{tab}</span>
+                </button>
+              ))}
+              
+              <button
+                onClick={() => navigator.clipboard.writeText(color)}
+                className="w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700/50"
+              >
+                <span>Copy Color: {color.toUpperCase()}</span>
+              </button>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 export default function ColorPanel({ 
   color, handleColorChange, colors, colorHistory, 
   favorites, setColor, activeTab, setActiveTab, isDarkMode,
@@ -13,7 +67,13 @@ export default function ColorPanel({
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [tooltipColor, setTooltipColor] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Add this state
   const wheelRef = useRef(null);
+  
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(prev => !prev);
+  };
   
   // Initialize color wheel with current color when opened
   useEffect(() => {
@@ -24,6 +84,18 @@ export default function ColorPanel({
       setLightness(l * 100);
     }
   }, [color]);
+  
+  // Close mobile menu on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768 && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [mobileMenuOpen]);
 
   // Convert hsl values to hex and update color
   const updateColorFromWheel = (h, s, l) => {
@@ -101,6 +173,15 @@ export default function ColorPanel({
 
   return (
     <div className="h-full flex flex-col">
+      <div className="lg:hidden">
+        <Navbar 
+          setShowPanel={setShowPanel} 
+          color={color} 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab}
+        />
+      </div>
+      
       {/* Mobile navigation banner */}
       <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="flex items-center space-x-2">
@@ -116,18 +197,105 @@ export default function ColorPanel({
           <h2 className="text-base font-medium text-gray-900 dark:text-white">Color Studio</h2>
         </div>
         
-        {/* Add a visible close button */}
-        <button 
-          onClick={() => setShowPanel(false)}
-          className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
-          aria-label="Close panel"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-600 dark:text-gray-300">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+     
       </div>
+      
+      {/* Mobile slide-out menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            className="fixed inset-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm lg:hidden"
+          >
+            <div className="fixed right-0 top-0 bottom-0 w-3/4 max-w-xs bg-white dark:bg-gray-800 shadow-xl p-5 overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Menu</h3>
+                <button
+                  onClick={toggleMobileMenu}
+                  className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              
+              <nav className="space-y-4">
+                {['wheel', 'colors', 'history', 'favorites'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-colors ${
+                      activeTab === tab
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    {tab === 'wheel' && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" strokeWidth="0" fill="currentColor" fillOpacity="0.2" />
+                      </svg>
+                    )}
+                    {tab === 'colors' && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                      </svg>
+                    )}
+                    {tab === 'history' && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                    {tab === 'favorites' && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    )}
+                    <span className="capitalize">{tab}</span>
+                  </button>
+                ))}
+              </nav>
+              
+              {/* Additional actions in mobile menu */}
+              <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Actions</h4>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(color);
+                      toggleMobileMenu();
+                    }}
+                    className="flex items-center space-x-3 px-4 py-3 w-full text-left rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                      <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                    </svg>
+                    <span className="text-gray-700 dark:text-gray-300">Copy Color: {color.toUpperCase()}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowPanel(false)}
+                    className="flex items-center space-x-3 px-4 py-3 w-full text-left rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-gray-700 dark:text-gray-300">Close Color Panel</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Header */}
       <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
