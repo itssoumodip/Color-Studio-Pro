@@ -150,6 +150,10 @@ function App() {
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 onClick={e => e.stopPropagation()}
               >
+
+                {/* Add a handle for mobile that users can drag to close the panel */}
+                <div className="lg:hidden w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mt-3 mb-1"></div>
+
                 <ColorPanel 
                   color={color}
                   handleColorChange={handleColorChange}
@@ -160,13 +164,14 @@ function App() {
                   activeTab={activeTab}
                   setActiveTab={setActiveTab}
                   isDarkMode={isDarkMode}
+                  setShowPanel={setShowPanel} // Add this prop
                 />
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
         
-        {/* Action buttons */}
+        {/* Action buttons - improved for mobile */}
         <div className="fixed bottom-6 right-6 flex flex-col gap-3 items-center z-30">
           <AnimatePresence>
             {copied && (
@@ -193,51 +198,19 @@ function App() {
               <circle cx="12" cy="12" r="10"></circle>
               <path d="M12 16v-4M12 8h.01"></path>
             </svg>
-          </motion.button>
+          </motion.button>         
           
-          {/* Copy button */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => copyToClipboard(color)}
-            className="p-3 rounded-full bg-white/10 backdrop-blur-md shadow-lg hover:bg-white/20 transition-colors"
-            style={{ color: textColor }}
-            aria-label="Copy color"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </motion.button>
-          
-          {/* Favorite button */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleFavorite}
-            className="p-3 rounded-full bg-white/10 backdrop-blur-md shadow-lg hover:bg-white/20 transition-colors"
-            style={{ color: textColor }}
-            aria-label={favorites.includes(color) ? "Remove from favorites" : "Add to favorites"}
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="24" height="24" 
-              viewBox="0 0 24 24" 
-              fill={favorites.includes(color) ? "currentColor" : "none"} 
-              stroke="currentColor" 
-              strokeWidth="2"
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-            </svg>
-          </motion.button>
-          
-          {/* Panel toggle button */}
+          {/* Panel toggle button - improved for visibility */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => {
-              console.log('Toggle panel clicked, current state:', showPanel);
               setShowPanel(prevState => !prevState);
             }}
             className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-xl hover:shadow-2xl transition-shadow relative overflow-hidden z-30"
             aria-label={showPanel ? "Close color panel" : "Open color panel"}
+            style={{
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)'
+            }}
           >
             <motion.div
               className="absolute inset-0 opacity-20"
@@ -252,6 +225,8 @@ function App() {
               fill="none" 
               stroke={isDarkMode ? "#fff" : "#000"} 
               strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               className="relative z-10"
             >
               {showPanel ? (

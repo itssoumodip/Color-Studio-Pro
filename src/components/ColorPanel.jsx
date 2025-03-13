@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ColorWheel from './ColorWheel';
 
 export default function ColorPanel({ 
   color, handleColorChange, colors, colorHistory, 
-  favorites, setColor, activeTab, setActiveTab, isDarkMode
+  favorites, setColor, activeTab, setActiveTab, isDarkMode,
+  setShowPanel // Add this prop
 }) {
   const [hue, setHue] = useState(0);
   const [saturation, setSaturation] = useState(100);
@@ -74,6 +76,14 @@ export default function ColorPanel({
     setShowTooltip(true);
   };
 
+  // Move the regenerateSuggestions function here, inside the component
+  const regenerateSuggestions = () => {
+    // Generate new suggestions by slightly modifying the hue
+    const newHue = (hue + Math.random() * 30 - 15 + 360) % 360;
+    setHue(newHue);
+    updateColorFromWheel(newHue, saturation, lightness);
+  };
+  
   // Tab item for reuse
   const TabItem = ({ id, label, icon }) => (
     <button 
@@ -91,6 +101,34 @@ export default function ColorPanel({
 
   return (
     <div className="h-full flex flex-col">
+      {/* Mobile navigation banner */}
+      <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <div className="flex items-center space-x-2">
+          <button 
+            onClick={() => setShowPanel(false)}
+            className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+            aria-label="Back to home"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-600 dark:text-gray-300">
+              <path d="M19 12H5M12 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <h2 className="text-base font-medium text-gray-900 dark:text-white">Color Studio</h2>
+        </div>
+        
+        {/* Add a visible close button */}
+        <button 
+          onClick={() => setShowPanel(false)}
+          className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+          aria-label="Close panel"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-600 dark:text-gray-300">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
       {/* Header */}
       <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
@@ -177,19 +215,7 @@ export default function ColorPanel({
                   }} 
                 />
                 
-                <motion.div 
-                  className="absolute -top-4 -right-4 w-16 h-16 rounded-2xl shadow-xl border-2 border-white/80 backdrop-filter backdrop-blur-sm"
-                  style={{ backgroundColor: color }}
-                  animate={{ 
-                    rotate: [0, 5, -5, 0], 
-                    boxShadow: [
-                      '0 8px 20px rgba(0, 0, 0, 0.15)',
-                      '0 8px 25px rgba(0, 0, 0, 0.2)',
-                      '0 8px 20px rgba(0, 0, 0, 0.15)'
-                    ]
-                  }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                />
+                
                 
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8, y: 10 }}
@@ -197,7 +223,7 @@ export default function ColorPanel({
                   className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 translate-y-full bg-white dark:bg-gray-800 px-3 py-1 rounded-md shadow-md z-20 flex items-center space-x-2 border border-gray-100 dark:border-gray-700"
                 >
                   <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }}></div>
-                  <span className="font-mono text-xs">{color.toUpperCase()}</span>
+                  <span className="font-mono text-xs text-white">{color.toUpperCase()}</span>
                   <button
                     onClick={() => navigator.clipboard.writeText(color)}
                     className="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
@@ -245,11 +271,12 @@ export default function ColorPanel({
                           setHue(newHue);
                           updateColorFromWheel(newHue, saturation, lightness);
                         }}
-                        className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                        className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 relative"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M12 5v14M5 12h14"></path>
-                        </svg>
+                        {/* Horizontal line */}
+                        <div className="absolute left-1 right-1 top-1/2 h-0.5 bg-current transform -translate-y-1/2"></div>
+                        {/* Vertical line */}
+                        <div className="absolute top-1 bottom-1 left-1/2 w-0.5 bg-current transform -translate-x-1/2"></div>
                       </button>
                     </div>
                   </motion.div>
@@ -349,7 +376,7 @@ export default function ColorPanel({
                     </span>
                   </div>
                   
-                  <div className="h-6 relative w-full rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700 p-1">
+                  <div className="h-6 relative w-full rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700">
                     {/* Gradient background */}
                     <div
                       className="absolute inset-0"
@@ -377,12 +404,13 @@ export default function ColorPanel({
                         setLightness(newLightness);
                         updateColorFromWheel(hue, saturation, newLightness);
                       }}
-                      className="w-full h-full opacity-0 cursor-pointer relative z-10"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      style={{ touchAction: 'none' }}
                     />
                     
-                    {/* Slider thumb */}
+                    {/* Slider thumb */}  
                     <motion.div 
-                      className="absolute w-6 h-6 rounded-full bg-white shadow-lg top-1/2 transform -translate-y-1/2 z-10 pointer-events-none flex items-center justify-center"
+                      className="absolute w-6 h-6 rounded-full bg-white shadow-lg top-1/2 z-10 pointer-events-none flex items-center justify-center"
                       style={{ 
                         left: `${lightness}%`, 
                         transform: 'translate(-50%, -50%)' 
@@ -401,7 +429,8 @@ export default function ColorPanel({
                   </div>
                   
                   <div className="flex justify-between mt-1 text-xs text-gray-500">
-                    <span>0%</                    <span>50%</span>
+                    <span>0%</span>
+                    <span>50%</span>
                     <span>100%</span>
                   </div>
                 </div>
@@ -413,17 +442,10 @@ export default function ColorPanel({
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        const randomHue = Math.floor(Math.random() * 360);
-                        setHue(randomHue);
-                        updateColorFromWheel(randomHue, saturation, lightness);
-                      }}
-                      className="flex items-center space-x-1 px-3 py-1 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm rounded-full text-xs shadow-sm"
+                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      onClick={regenerateSuggestions}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M7 22V11M17 22V11M2 8l10-5 10 5M2 13h20"></path>
-                      </svg>
-                      <span>Random</span>
+                      Regenerate
                     </motion.button>
                   </div>
 
