@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ColorPanel({ 
   color, handleColorChange, colors, colorHistory, 
@@ -8,8 +8,11 @@ export default function ColorPanel({
   const [hue, setHue] = useState(0);
   const [saturation, setSaturation] = useState(100);
   const [lightness, setLightness] = useState(50);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [tooltipColor, setTooltipColor] = useState('');
   const wheelRef = useRef(null);
-
+  
   // Initialize color wheel with current color when opened
   useEffect(() => {
     if (color) {
@@ -61,256 +64,517 @@ export default function ColorPanel({
     updateColorFromWheel(newHue, newSaturation, lightness);
   };
 
+  // Show tooltip with color information
+  const handleShowTooltip = (hex, e) => {
+    setTooltipColor(hex);
+    setTooltipPosition({ 
+      x: e.clientX, 
+      y: e.clientY - 40 
+    });
+    setShowTooltip(true);
+  };
+
+  // Tab item for reuse
+  const TabItem = ({ id, label, icon }) => (
+    <button 
+      onClick={() => setActiveTab(id)}
+      className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center space-x-2 ${
+        activeTab === id 
+          ? 'bg-white dark:bg-gray-800 shadow-md text-gray-900 dark:text-white' 
+          : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5'
+      }`}
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+
   return (
-    <div className="p-6 h-full flex flex-col">
-      <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Color Studio</h2>
-      
-      {/* Tab navigation */}
-      <div className="flex space-x-1 mb-4 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-        <button 
-          onClick={() => setActiveTab('wheel')}
-          className={`flex-1 py-2 rounded-md text-sm font-medium ${
-            activeTab === 'wheel' 
-              ? 'bg-white dark:bg-gray-800 shadow-sm' 
-              : 'text-gray-600 dark:text-gray-300'
-          }`}
-        >
-          Wheel
-        </button>
-        <button 
-          onClick={() => setActiveTab('colors')}
-          className={`flex-1 py-2 rounded-md text-sm font-medium ${
-            activeTab === 'colors' 
-              ? 'bg-white dark:bg-gray-800 shadow-sm' 
-              : 'text-gray-600 dark:text-gray-300'
-          }`}
-        >
-          Colors
-        </button>
-        <button 
-          onClick={() => setActiveTab('history')}
-          className={`flex-1 py-2 rounded-md text-sm font-medium ${
-            activeTab === 'history' 
-              ? 'bg-white dark:bg-gray-800 shadow-sm' 
-              : 'text-gray-600 dark:text-gray-300'
-          }`}
-        >
-          History
-        </button>
-        <button 
-          onClick={() => setActiveTab('favorites')}
-          className={`flex-1 py-2 rounded-md text-sm font-medium ${
-            activeTab === 'favorites' 
-              ? 'bg-white dark:bg-gray-800 shadow-sm' 
-              : 'text-gray-600 dark:text-gray-300'
-          }`}
-        >
-          Favorites
-        </button>
-      </div>
-      
-      {/* Color input */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Current Color
-        </label>
-        <div className="flex items-center space-x-3">
-          <div 
-            className="w-10 h-10 rounded-lg border border-gray-300 dark:border-gray-600 shadow-inner" 
-            style={{ backgroundColor: color }}
-          ></div>
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+          <span className="relative mr-2">
+            <span className="w-5 h-5 rounded-full block" style={{ backgroundColor: color }}></span>
+            <span className="absolute inset-0 rounded-full animate-ping opacity-75" style={{ backgroundColor: color }}></span>
+          </span>
+          Color Studio
+        </h2>
+        
+        {/* Color code input */}
+        <div className="relative">
           <input 
             type="text" 
             value={color} 
             onChange={(e) => handleColorChange(e.target.value)}
-            className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono uppercase"
+            className="px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-xl bg-white/80 dark:bg-gray-800/80 text-gray-900 dark:text-white font-mono uppercase text-sm w-36"
           />
+          <div 
+            className="absolute right-2.5 top-1/2 transform -translate-y-1/2 w-5 h-5 rounded-full border border-gray-300 dark:border-gray-600" 
+            style={{ backgroundColor: color }}
+          ></div>
         </div>
       </div>
       
-      {/* Color wheel tab */}
-      {activeTab === 'wheel' && (
-        <div className="flex flex-col items-center space-y-6">
-          {/* Color wheel */}
-          <div 
-            ref={wheelRef}
-            className="relative w-64 h-64 rounded-full shadow-lg"
-            style={{
-              background: `conic-gradient(
-                hsl(0, 100%, 50%),
-                hsl(60, 100%, 50%),
-                hsl(120, 100%, 50%),
-                hsl(180, 100%, 50%),
-                hsl(240, 100%, 50%),
-                hsl(300, 100%, 50%),
-                hsl(360, 100%, 50%)
-              )`
-            }}
-            onMouseDown={(e) => {
-              handleWheelInteraction(e);
+      {/* Tab navigation */}
+      <div className="flex p-3 gap-1 bg-gray-100 dark:bg-gray-800/50">
+        <TabItem 
+          id="wheel" 
+          label="Wheel" 
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" strokeWidth="2" />
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" strokeWidth="0" fill="currentColor" fillOpacity="0.2" />
+            </svg>
+          } 
+        />
+        <TabItem 
+          id="colors" 
+          label="Palette" 
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+          } 
+        />
+        <TabItem 
+          id="history" 
+          label="History" 
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          } 
+        />
+        <TabItem 
+          id="favorites" 
+          label="Saved" 
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          } 
+        />
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <AnimatePresence mode="wait">
+          {/* Color wheel tab */}
+          {activeTab === 'wheel' && (
+            <motion.div 
+              key="wheel"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex flex-col items-center space-y-8"
+            >
+              <div className="relative">
+                {/* Color wheel */}
+                <motion.div 
+                  ref={wheelRef}
+                  className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full shadow-lg border border-white/20 dark:border-black/20"
+                  style={{
+                    background: `conic-gradient(
+                      hsl(0, 100%, 50%),
+                      hsl(60, 100%, 50%),
+                      hsl(120, 100%, 50%),
+                      hsl(180, 100%, 50%),
+                      hsl(240, 100%, 50%),
+                      hsl(300, 100%, 50%),
+                      hsl(360, 100%, 50%)
+                    )`
+                  }}
+                  onMouseDown={(e) => {
+                    handleWheelInteraction(e);
+                    
+                    const handleMouseMove = (moveEvent) => {
+                      handleWheelInteraction(moveEvent);
+                    };
+                    
+                    const handleMouseUp = () => {
+                      document.removeEventListener('mousemove', handleMouseMove);
+                      document.removeEventListener('mouseup', handleMouseUp);
+                    };
+                    
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                  }}
+                  onTouchStart={(e) => {
+                    handleWheelInteraction(e);
+                    
+                    const handleTouchMove = (moveEvent) => {
+                      handleWheelInteraction(moveEvent);
+                    };
+                    
+                    const handleTouchEnd = () => {
+                      document.removeEventListener('touchmove', handleTouchMove);
+                      document.removeEventListener('touchend', handleTouchEnd);
+                    };
+                    
+                    document.addEventListener('touchmove', handleTouchMove);
+                    document.addEventListener('touchend', handleTouchEnd);
+                  }}
+                >
+                  {/* White overlay to create saturation gradient */}
+                  <div className="absolute inset-0 rounded-full"
+                    style={{
+                      background: 'radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)'
+                    }}
+                  ></div>
+                  
+                  {/* Center white point */}
+                  <div className="absolute w-4 h-4 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80 shadow-sm pointer-events-none"></div>
+                  
+                  {/* Selected color indicator */}
+                  <motion.div
+                    layout
+                    className="absolute w-7 h-7 rounded-full border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
+                      left: `${50 + Math.cos((hue * Math.PI) / 180) * (saturation / 100) * 50}%`,
+                      top: `${50 + Math.sin((hue * Math.PI) / 180) * (saturation / 100) * 50}%`
+                    }}
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      transition: { duration: 0.5, repeat: Infinity, repeatDelay: 2 }
+                    }}
+                  ></motion.div>
+                </motion.div>
+                
+                {/* Preview of current color */}
+                <motion.div 
+                  className="absolute -top-4 -right-4 w-14 h-14 rounded-xl shadow-lg border-2 border-white"
+                  style={{ backgroundColor: color }}
+                  animate={{ rotate: [0, 5, -5, 0], transition: { duration: 2, repeat: Infinity } }}
+                />
+              </div>
               
-              const handleMouseMove = (moveEvent) => {
-                handleWheelInteraction(moveEvent);
-              };
+              {/* Lightness slider */}
+              <div className="w-full max-w-md">
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    Lightness
+                  </label>
+                  <span className="text-sm font-mono font-bold text-gray-900 dark:text-white">
+                    {Math.round(lightness)}%
+                  </span>
+                </div>
+                <div className="h-5 relative w-full rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
+                  {/* Gradient background */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(to right, 
+                        hsl(${hue}, ${saturation}%, 0%), 
+                        hsl(${hue}, ${saturation}%, 50%), 
+                        hsl(${hue}, ${saturation}%, 100%)
+                      )`
+                    }}
+                  ></div>
+                  
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={lightness}
+                    onChange={(e) => {
+                      const newLightness = parseInt(e.target.value);
+                      setLightness(newLightness);
+                      updateColorFromWheel(hue, saturation, newLightness);
+                    }}
+                    className="w-full h-full opacity-0 cursor-pointer relative z-10"
+                  />
+                  
+                  {/* Slider thumb */}
+                  <div 
+                    className="absolute w-5 h-5 rounded-full bg-white border-2 border-gray-300 shadow-md top-1/2 transform -translate-y-1/2 z-10 pointer-events-none"
+                    style={{ left: `${lightness}%`, transform: 'translate(-50%, -50%)' }}
+                  />
+                </div>
+              </div>
               
-              const handleMouseUp = () => {
-                document.removeEventListener('mousemove', handleMouseMove);
-                document.removeEventListener('mouseup', handleMouseUp);
-              };
+              {/* HSL values with modern cards */}
+              <div className="grid grid-cols-3 gap-3 w-full">
+                <motion.div 
+                  whileHover={{ scale: 1.03 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200 dark:border-gray-700"
+                >
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Hue</div>
+                  <div className="text-xl font-mono font-bold text-gray-900 dark:text-white flex items-baseline">
+                    {Math.round(hue)}
+                    <span className="text-xs ml-1 text-gray-500">°</span>
+                  </div>
+                  <div className="mt-2 h-1 bg-gradient-to-r from-red-500 via-green-500 to-blue-500 rounded-full" />
+                </motion.div>
+                <motion.div 
+                  whileHover={{ scale: 1.03 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200 dark:border-gray-700"
+                >
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Saturation</div>
+                  <div className="text-xl font-mono font-bold text-gray-900 dark:text-white flex items-baseline">
+                    {Math.round(saturation)}
+                    <span className="text-xs ml-1 text-gray-500">%</span>
+                  </div>
+                  <div className="mt-2 h-1 bg-gradient-to-r from-gray-300 to-blue-500 rounded-full" />
+                </motion.div>
+                <motion.div 
+                  whileHover={{ scale: 1.03 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200 dark:border-gray-700"
+                >
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Lightness</div>
+                  <div className="text-xl font-mono font-bold text-gray-900 dark:text-white flex items-baseline">
+                    {Math.round(lightness)}
+                    <span className="text-xs ml-1 text-gray-500">%</span>
+                  </div>
+                  <div className="mt-2 h-1 bg-gradient-to-r from-black via-gray-500 to-white rounded-full" />
+                </motion.div>
+              </div>
               
-              document.addEventListener('mousemove', handleMouseMove);
-              document.addEventListener('mouseup', handleMouseUp);
-            }}
-            onTouchStart={(e) => {
-              handleWheelInteraction(e);
+              {/* Suggestion colors based on current selection */}
+              <div className="w-full">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Suggestions</h3>
+                <div className="grid grid-cols-5 gap-3">
+                  {[0.8, 0.6, 0.4, 0.2, 0.1].map((factor) => {
+                    const suggestedHex = hslToHex(hue, saturation / 100, factor);
+                    return (
+                      <motion.button
+                        key={factor}
+                        whileHover={{ scale: 1.1, y: -3 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setColor(suggestedHex)}
+                        onMouseEnter={(e) => handleShowTooltip(suggestedHex, e)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                        className="aspect-square rounded-xl shadow-md border-2 transition-all overflow-hidden"
+                        style={{ 
+                          backgroundColor: suggestedHex,
+                          borderColor: suggestedHex === color ? 'white' : 'transparent'
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+          
+          {/* Preset colors tab */}
+          {activeTab === 'colors' && (
+            <motion.div
+              key="colors"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Color Palette</h3>
+              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
+                {colors.map((colorObj) => (
+                  <motion.button
+                    key={colorObj.hex}
+                    whileHover={{ scale: 1.1, y: -3 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setColor(colorObj.hex)}
+                    onMouseEnter={(e) => handleShowTooltip(colorObj.hex, e)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                    className="relative aspect-square rounded-xl border-2 transition-all"
+                    style={{ 
+                      backgroundColor: colorObj.hex,
+                      borderColor: colorObj.hex === color ? 'white' : 'transparent'
+                    }}
+                  >
+                    {colorObj.hex === color && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-white/80"></div>
+                      </div>
+                    )}
+                  </motion.button>
+                ))}
+              </div>
               
-              const handleTouchMove = (moveEvent) => {
-                handleWheelInteraction(moveEvent);
-              };
+              {/* Color shades section */}
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 mt-8">Shades & Tints</h3>
+              <div className="overflow-x-auto pb-4">
+                <div className="flex space-x-3 min-w-max">
+                  {[...Array(9)].map((_, i) => {
+                    const shade = i * 100 + 100;
+                    return (
+                      <div key={i} className="flex flex-col items-center">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setColor(getTailwindShade(color, shade))}
+                          onMouseEnter={(e) => handleShowTooltip(getTailwindShade(color, shade), e)}
+                          onMouseLeave={() => setShowTooltip(false)}
+                          className="w-10 h-10 rounded-lg shadow-md border-2 transition-all"
+                          style={{ 
+                            backgroundColor: getTailwindShade(color, shade),
+                            borderColor: getTailwindShade(color, shade) === color ? 'white' : 'transparent'
+                          }}
+                        />
+                        <span className="text-xs mt-1 text-gray-500">{shade}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+          
+          {/* History tab */}
+          {activeTab === 'history' && (
+            <motion.div
+              key="history"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Recent Colors</h3>
+                {colorHistory.length > 0 && (
+                  <button 
+                    className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    onClick={() => {
+                      localStorage.removeItem('colorHistory');
+                      window.location.reload();
+                    }}
+                  >
+                    Clear History
+                  </button>
+                )}
+              </div>
               
-              const handleTouchEnd = () => {
-                document.removeEventListener('touchmove', handleTouchMove);
-                document.removeEventListener('touchend', handleTouchEnd);
-              };
+              <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-3">
+                {colorHistory.length > 0 ? (
+                  colorHistory.map((hex) => (
+                    <motion.button
+                      key={hex}
+                      whileHover={{ scale: 1.1, y: -3 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setColor(hex)}
+                      onMouseEnter={(e) => handleShowTooltip(hex, e)}
+                      onMouseLeave={() => setShowTooltip(false)}
+                      className="aspect-square rounded-xl shadow-sm border-2 transition-all relative overflow-hidden"
+                      style={{ 
+                        backgroundColor: hex,
+                        borderColor: hex === color ? 'white' : 'transparent'
+                      }}
+                    >
+                      {hex === color && (
+                        <div className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-white/80"></div>
+                      )}
+                    </motion.button>
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-10 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-xs">
+                      No color history yet. Colors you select will appear here.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+          
+          {/* Favorites tab */}
+          {activeTab === 'favorites' && (
+            <motion.div
+              key="favorites"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Saved Colors</h3>
+                {favorites.length > 0 && (
+                  <button 
+                    className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    onClick={() => {
+                      localStorage.removeItem('colorFavorites');
+                      window.location.reload();
+                    }}
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
               
-              document.addEventListener('touchmove', handleTouchMove);
-              document.addEventListener('touchend', handleTouchEnd);
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                {favorites.length > 0 ? (
+                  favorites.map((hex) => (
+                    <motion.div
+                      key={hex}
+                      whileHover={{ scale: 1.05 }}
+                      className="relative"
+                    >
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setColor(hex)}
+                        onMouseEnter={(e) => handleShowTooltip(hex, e)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                        className="w-full aspect-square rounded-xl shadow-md border-2 transition-all"
+                        style={{ 
+                          backgroundColor: hex,
+                          borderColor: hex === color ? 'white' : 'transparent'
+                        }}
+                      />
+                      
+                      {/* Favorite heart icon */}
+                      <motion.div 
+                        whileHover={{ scale: 1.2 }}
+                        className="absolute -top-2 -right-2 p-1 bg-white dark:bg-gray-800 rounded-full shadow-md"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                        </svg>
+                      </motion.div>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-10 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-xs">
+                      No saved colors yet. Click the heart button in the main view to save colors.
+                    </p>
+                    <button 
+                      onClick={() => setActiveTab('wheel')}
+                      className="mt-4 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      Start Picking Colors
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      
+      {/* Color tooltip */}
+      <AnimatePresence>
+        {showTooltip && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="fixed z-50 px-3 py-2 bg-white dark:bg-gray-800 shadow-lg rounded-lg flex items-center space-x-2 border border-gray-200 dark:border-gray-700 pointer-events-none"
+            style={{ 
+              left: tooltipPosition.x,
+              top: tooltipPosition.y,
+              transform: 'translateX(-50%)'
             }}
           >
-            {/* White overlay to create saturation gradient */}
-            <div className="absolute inset-0 rounded-full"
-              style={{
-                background: 'radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)'
-              }}
-            ></div>
-            
-            {/* Selected color indicator */}
-            <div
-              className="absolute w-6 h-6 rounded-full border-2 border-white shadow-md transform -translate-x-1/2 -translate-y-1/2"
-              style={{
-                backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
-                left: `${50 + Math.cos((hue * Math.PI) / 180) * (saturation / 100) * 50}%`,
-                top: `${50 + Math.sin((hue * Math.PI) / 180) * (saturation / 100) * 50}%`
-              }}
-            ></div>
-          </div>
-          
-          {/* Lightness slider */}
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Lightness: {Math.round(lightness)}%
-            </label>
-            <div className="h-3 relative w-full rounded-lg overflow-hidden">
-              {/* Gradient background */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: `linear-gradient(to right, 
-                    hsl(${hue}, ${saturation}%, 0%), 
-                    hsl(${hue}, ${saturation}%, 50%), 
-                    hsl(${hue}, ${saturation}%, 100%)
-                  )`
-                }}
-              ></div>
-              
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={lightness}
-                onChange={(e) => {
-                  const newLightness = parseInt(e.target.value);
-                  setLightness(newLightness);
-                  updateColorFromWheel(hue, saturation, newLightness);
-                }}
-                className="w-full h-full opacity-0 cursor-pointer relative z-10"
-              />
-            </div>
-          </div>
-          
-          {/* HSL values */}
-          <div className="grid grid-cols-3 gap-3 w-full">
-            <div className="bg-white/10 dark:bg-gray-700/50 rounded-lg p-3">
-              <div className="text-xs opacity-60 dark:text-gray-300">Hue</div>
-              <div className="text-xl font-mono font-bold text-gray-900 dark:text-white">{Math.round(hue)}°</div>
-            </div>
-            <div className="bg-white/10 dark:bg-gray-700/50 rounded-lg p-3">
-              <div className="text-xs opacity-60 dark:text-gray-300">Saturation</div>
-              <div className="text-xl font-mono font-bold text-gray-900 dark:text-white">{Math.round(saturation)}%</div>
-            </div>
-            <div className="bg-white/10 dark:bg-gray-700/50 rounded-lg p-3">
-              <div className="text-xs opacity-60 dark:text-gray-300">Lightness</div>
-              <div className="text-xl font-mono font-bold text-gray-900 dark:text-white">{Math.round(lightness)}%</div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Preset colors tab */}
-      {activeTab === 'colors' && (
-        <div className="grid grid-cols-4 gap-3">
-          {colors.map((colorObj) => (
-            <button
-              key={colorObj.hex}
-              onClick={() => setColor(colorObj.hex)}
-              className="w-full aspect-square rounded-lg border-2 transition-all hover:scale-105"
-              style={{ 
-                backgroundColor: colorObj.hex,
-                borderColor: colorObj.hex === color ? 'white' : 'transparent'
-              }}
-              title={colorObj.name}
-            ></button>
-          ))}
-        </div>
-      )}
-      
-      {/* History tab */}
-      {activeTab === 'history' && (
-        <div className="grid grid-cols-5 gap-2">
-          {colorHistory.length > 0 ? (
-            colorHistory.map((hex) => (
-              <button
-                key={hex}
-                onClick={() => setColor(hex)}
-                className="w-full aspect-square rounded-lg border-2 transition-all hover:scale-105"
-                style={{ 
-                  backgroundColor: hex,
-                  borderColor: hex === color ? 'white' : 'transparent'
-                }}
-                title={hex}
-              ></button>
-            ))
-          ) : (
-            <p className="col-span-5 text-center text-gray-500 dark:text-gray-400 py-8">
-              No color history yet. Choose some colors to see them here.
-            </p>
-          )}
-        </div>
-      )}
-      
-      {/* Favorites tab */}
-      {activeTab === 'favorites' && (
-        <div className="grid grid-cols-5 gap-2">
-          {favorites.length > 0 ? (
-            favorites.map((hex) => (
-              <button
-                key={hex}
-                onClick={() => setColor(hex)}
-                className="w-full aspect-square rounded-lg border-2 transition-all hover:scale-105"
-                style={{ 
-                  backgroundColor: hex,
-                  borderColor: hex === color ? 'white' : 'transparent'
-                }}
-                title={hex}
-              ></button>
-            ))
-          ) : (
-            <p className="col-span-5 text-center text-gray-500 dark:text-gray-400 py-8">
-              No favorites yet. Use the heart button to save colors you like.
-            </p>
-          )}
-        </div>
-      )}
+            <div 
+              className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600" 
+              style={{ backgroundColor: tooltipColor }}
+            />
+            <span className="font-mono text-xs text-gray-800 dark:text-gray-200 uppercase">{tooltipColor}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -396,4 +660,14 @@ function hslToHex(h, s, l) {
   };
   
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// New helper function for Tailwind-style color shades
+function getTailwindShade(hexColor, shade) {
+  // Convert hex to hsl
+  const { h, s, l } = hexToHsl(hexColor);
+  // Adjust lightness based on shade
+  const newLightness = l * (shade / 1000);
+  // Convert back to hex
+  return hslToHex(h, s, newLightness);
 }
