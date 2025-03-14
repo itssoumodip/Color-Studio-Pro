@@ -182,23 +182,7 @@ export default function ColorPanel({
         />
       </div>
       
-      {/* Mobile navigation banner */}
-      <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="flex items-center space-x-2">
-          <button 
-            onClick={() => setShowPanel(false)}
-            className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
-            aria-label="Back to home"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-600 dark:text-gray-300">
-              <path d="M19 12H5M12 19l-7-7 7-7"></path>
-            </svg>
-          </button>
-          <h2 className="text-base font-medium text-gray-900 dark:text-white">Color Studio</h2>
-        </div>
-        
      
-      </div>
       
       {/* Mobile slide-out menu */}
       <AnimatePresence>
