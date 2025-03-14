@@ -56,21 +56,6 @@ export default function Header({ color, textColor, viewMode, setViewMode, isDark
         </div>
         
         <div className="flex items-center gap-4">
-          {/* Color Preview Chip */}
-          <motion.div 
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-full border border-slate-200 dark:border-slate-700"
-            whileHover={{ scale: 1.03 }}
-          >
-            <div 
-              className="w-4 h-4 rounded-full shadow-inner border border-slate-200 dark:border-slate-700" 
-              style={{ backgroundColor: color }}
-            ></div>
-            <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300 uppercase">
-              {color}
-            </span>
-          </motion.div>
-          
-         
           {/* View mode switcher - improved visibility */}
           <div className="hidden sm:flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1.5 shadow-inner">
             <motion.button 
@@ -210,28 +195,7 @@ export default function Header({ color, textColor, viewMode, setViewMode, isDark
                 </div>
               </div>
               
-              {/* Current color */}
-              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700" 
-                    style={{ backgroundColor: color }}
-                  ></div>
-                  <span className="font-mono text-sm font-medium text-slate-700 dark:text-slate-300 uppercase">
-                    {color}
-                  </span>
-                </div>
-                <button 
-                  className="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400"
-                  onClick={() => navigator.clipboard.writeText(color)}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
-                  </svg>
-                </button>
-              </div>
-
+             
             </div>
           </motion.div>
         )}
