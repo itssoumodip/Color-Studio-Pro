@@ -279,7 +279,7 @@ export default function ColorDisplay({
               className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 backdrop-blur-lg bg-black/70 text-white px-5 py-3 rounded-full shadow-xl font-medium text-sm flex items-center space-x-2"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 22 12 22C7.02944 22 3 17.5228 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span>Copied to clipboard!</span>
             </motion.div>
@@ -377,24 +377,17 @@ export default function ColorDisplay({
 function ColorInfoModal({ color, complementary, rgb, textColor, setShowInfo, copyToClipboard }) {
   const complementTextColor = getContrastColor(complementary);
   const shades = generateShades(color);
-  // Force mobile mode to true to ensure the button appears
   const [isMobile, setIsMobile] = useState(true);
-  
+
   useEffect(() => {
-    // Add console log to debug
     console.log("isMobile state:", isMobile);
-    
-    // Store original body overflow
     const originalOverflow = document.body.style.overflow;
-    // Prevent background scrolling
     document.body.style.overflow = 'hidden';
-    
     return () => {
-      // Restore original overflow on cleanup
       document.body.style.overflow = originalOverflow;
     };
   }, []);
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
@@ -403,37 +396,6 @@ function ColorInfoModal({ color, complementary, rgb, textColor, setShowInfo, cop
       className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/30"
       onClick={() => setShowInfo(false)}
     >
-      {/* Always visible back button */}
-      <div style={{
-        position: 'fixed',
-        top: '20px',
-        left: '20px',
-        zIndex: 9999,
-        padding: 0,
-        margin: 0
-      }}>
-        <button
-          onClick={() => setShowInfo(false)}
-          style={{
-            backgroundColor: '#ff3b30',
-            border: '2px solid white',
-            borderRadius: '50%',
-            width: '48px',
-            height: '48px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-            padding: 0,
-            margin: 0
-          }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-      </div>
-
       <motion.div 
         className="w-full max-w-md bg-white/20 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden"
         initial={{ scale: 0.9, y: 20 }}
@@ -442,7 +404,6 @@ function ColorInfoModal({ color, complementary, rgb, textColor, setShowInfo, cop
         transition={{ type: "spring", damping: 20 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal content */}
         <div className="h-24 relative" style={{ backgroundColor: color }}>
           <button 
             className="absolute top-4 right-4 p-2 rounded-full bg-black/20 backdrop-blur-lg"
@@ -455,39 +416,81 @@ function ColorInfoModal({ color, complementary, rgb, textColor, setShowInfo, cop
         </div>
         
         <div className="p-6">
-          {/* Modal content remains the same */}
+          <h2 className="text-xl font-bold mb-6" style={{ color: textColor }}>Color Details</h2>
+          
+          {/* Color values */}
+          <div className="space-y-4 mb-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-xs font-medium opacity-60" style={{ color: textColor }}>HEX</p>
+                <p className="font-mono font-bold" style={{ color: textColor }}>{color}</p>
+              </div>
+              <button 
+                onClick={() => copyToClipboard(color)}
+                className="p-2 rounded-full hover:bg-white/10 transition-all"
+                style={{ color: textColor }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M8 5H6C4.89543 5 4 5.89543 4 7V19C4 20.1046 4.89543 21 6 21H16C17.1046 21 18 20.1046 18 19V17M16 3H10C8.89543 3 8 3.89543 8 5V15C8 16.1046 8.89543 17 10 17H20C21.1046 17 22 16.1046 22 15V9L16 3Z" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-xs font-medium opacity-60" style={{ color: textColor }}>RGB</p>
+                <p className="font-mono font-bold" style={{ color: textColor }}>{`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`}</p>
+              </div>
+              <button 
+                onClick={() => copyToClipboard(`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`)}
+                className="p-2 rounded-full hover:bg-white/10 transition-all"
+                style={{ color: textColor }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M8 5H6C4.89543 5 4 5.89543 4 7V19C4 20.1046 4.89543 21 6 21H16C17.1046 21 18 20.1046 18 19V17M16 3H10C8.89543 3 8 3.89543 8 5V15C8 16.1046 8.89543 17 10 17H20C21.1046 17 22 16.1046 22 15V9L16 3Z" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          {/* Complementary color section */}
+          <div className="mb-6">
+            <p className="text-xs font-medium opacity-60 mb-2" style={{ color: textColor }}>COMPLEMENTARY</p>
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-10 h-10 rounded-full"
+                style={{ backgroundColor: complementary }}
+              ></div>
+              <div className="flex-1 flex justify-between items-center">
+                <p className="font-mono font-bold" style={{ color: textColor }}>{complementary}</p>
+                <button 
+                  onClick={() => copyToClipboard(complementary)}
+                  className="p-2 rounded-full hover:bg-white/10 transition-all"
+                  style={{ color: textColor }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M8 5H6C4.89543 5 4 5.89543 4 7V19C4 20.1046 4.89543 21 6 21H16C17.1046 21 18 20.1046 18 19V17M16 3H10C8.89543 3 8 3.89543 8 5V15C8 16.1046 8.89543 17 10 17H20C21.1046 17 22 16.1046 22 15V9L16 3Z" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Color shades */}
+          <div>
+            <p className="text-xs font-medium opacity-60 mb-3" style={{ color: textColor }}>COLOR PALETTE</p>
+            <div className="flex space-x-2">
+              {shades.map(shade => (
+                <div 
+                  key={shade}
+                  className="flex-1 h-10 rounded-lg cursor-pointer transition-transform hover:scale-105"
+                  style={{ backgroundColor: shade }}
+                  onClick={() => copyToClipboard(shade)}
+                ></div>
+              ))}
+            </div>
+          </div>
         </div>
       </motion.div>
-      
-      {/* Additional bottom back button */}
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 9999
-      }}>
-        <button
-          onClick={() => setShowInfo(false)}
-          style={{
-            backgroundColor: '#0a84ff',
-            color: 'white',
-            borderRadius: '24px',
-            padding: '12px 24px',
-            fontWeight: 'bold',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 4px 12px rgba(10,132,255,0.4)',
-            border: 'none'
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          BACK
-        </button>
-      </div>
     </motion.div>
   );
 }
@@ -569,3 +572,5 @@ function rgbToHslString(r, g, b) {
   const { h, s, l } = rgbToHsl(r, g, b);
   return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
 }
+
+export { ColorInfoModal };

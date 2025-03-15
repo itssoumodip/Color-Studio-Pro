@@ -6,6 +6,7 @@ import Header from './components/Header'
 import { hexToRgb, getContrastColor, getComplementaryColor } from './utils/colorUtils'
 import './index.css';
 import ColorWheel from './components/ColorWheel';
+import { ColorInfoModal } from './components/ColorDisplay';
 
 function App() {
   // State management
@@ -102,7 +103,6 @@ function App() {
   return (
     <div className={`${isDarkMode ? 'dark' : ''}`}>
       <div className="relative h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-900 flex flex-col">
-        {/* Header */}
         <Header 
           color={color} 
           textColor={textColor}
@@ -114,7 +114,6 @@ function App() {
           toggleDarkMode={toggleDarkMode}
         />
         
-        {/* Main content */}
         <main className="flex-1 relative">
           <ColorDisplay 
             color={color}
@@ -128,50 +127,8 @@ function App() {
             showInfo={showInfo}
             setShowInfo={setShowInfo}
           />
-          
-          {/* SUPER VISIBLE BACK BUTTON - ABSOLUTELY POSITIONED */}
-          {showInfo && (
-            <div id="absolute-back-button" style={{
-              position: 'absolute',
-              bottom: '40px',
-              left: 0,
-              right: 0,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              zIndex: 9999999,
-              pointerEvents: 'all'
-            }}>
-              <button
-                onClick={() => {
-                  console.log("BACK BUTTON CLICKED");
-                  setShowInfo(false);
-                }}
-                style={{
-                  backgroundColor: '#ff3b30',
-                  color: 'white',
-                  borderRadius: '30px',
-                  padding: '15px 30px',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
-                  border: '3px solid white',
-                  cursor: 'pointer'
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                BACK TO HOME
-              </button>
-            </div>
-          )}
         </main>
 
-        {/* Color panel drawer - conditionally rendered with animation */}
         <AnimatePresence>
           {showPanel && (
             <motion.div 
@@ -191,8 +148,6 @@ function App() {
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 onClick={e => e.stopPropagation()}
               >
-
-                {/* Add a handle for mobile that users can drag to close the panel */}
                 <div className="lg:hidden w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mt-3 mb-1"></div>
 
                 <ColorPanel 
@@ -205,14 +160,13 @@ function App() {
                   activeTab={activeTab}
                   setActiveTab={setActiveTab}
                   isDarkMode={isDarkMode}
-                  setShowPanel={setShowPanel} // Add this prop
+                  setShowPanel={setShowPanel}
                 />
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
         
-        {/* Action buttons - improved for mobile */}
         <div className="fixed bottom-6 right-6 flex flex-col gap-3 items-center z-30">
           <AnimatePresence>
             {copied && (
@@ -226,7 +180,6 @@ function App() {
               </motion.div>
             )}
           </AnimatePresence>
-          {/* Panel toggle button - improved for visibility */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => {
@@ -271,39 +224,6 @@ function App() {
           </motion.button>
         </div>
 
-        {/* NEW APPROACH: External fixed back button */}
-        {showInfo && (
-          <div 
-            onClick={() => {
-              console.log("EMERGENCY BACK BUTTON CLICKED");
-              setShowInfo(false); 
-            }}
-            style={{
-              position: 'fixed',
-              top: '20px',
-              left: '20px', 
-              width: '50px',
-              height: '50px',
-              backgroundColor: 'red',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 0 4px white, 0 0 20px rgba(255,0,0,0.7)',
-              cursor: 'pointer',
-              zIndex: 2147483647, // Maximum possible z-index
-              animation: 'pulsate 1.5s infinite alternate',
-              border: 'none',
-              outline: 'none'
-            }}
-          >
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        )}
-        
-        {/* Add keyframe animation directly in document */}
         <style dangerouslySetInnerHTML={{ __html: `
           @keyframes pulsate {
             0% {
