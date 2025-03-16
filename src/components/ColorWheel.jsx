@@ -60,6 +60,30 @@ const ColorWheel = ({ color, onChange }) => {
     setIsDrawn(true);
   }, [isDrawn]);
 
+  // Add these event handlers to the canvas element
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    
+    // Prevent default touch behaviors to avoid page scrolling
+    const preventDefaultTouch = (e) => {
+      e.preventDefault();
+    };
+    
+    if (canvas) {
+      canvas.addEventListener('touchstart', preventDefaultTouch, { passive: false });
+      canvas.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+      canvas.addEventListener('touchend', preventDefaultTouch, { passive: false });
+    }
+    
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener('touchstart', preventDefaultTouch);
+        canvas.removeEventListener('touchmove', preventDefaultTouch);
+        canvas.removeEventListener('touchend', preventDefaultTouch);
+      }
+    };
+  }, []);
+
   // Event handler for both mouse and touch interactions
   const handleInteraction = (e) => {
     if (!wheelRef.current) return;

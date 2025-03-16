@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ColorWheel from './ColorWheel';
 
-// Add this at the to p of your file, above the ColorPanel component
+// Add this at the top of your file, above the ColorPanel component
 function Navbar({ setShowPanel, color, activeTab, setActiveTab }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
@@ -13,8 +13,6 @@ function Navbar({ setShowPanel, color, activeTab, setActiveTab }) {
                  
   return (
     <>
-     
-
       {/* Mobile menu */}
       <AnimatePresence>
         {isMenuOpen && (
@@ -182,8 +180,6 @@ export default function ColorPanel({
         />
       </div>
       
-     
-      
       {/* Mobile slide-out menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
@@ -291,6 +287,7 @@ export default function ColorPanel({
           Color Studio
         </h2>
         
+
         {/* Color code input */}
         <div className="relative">
           <input 
@@ -870,6 +867,21 @@ export default function ColorPanel({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Add floating back button for mobile */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setShowPanel(false)}
+        className="fixed top-4 left-4 z-50 bg-white/90 dark:bg-gray-800/90 shadow-lg rounded-full p-3 lg:hidden"
+        aria-label="Go back"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+        </svg>
+      </motion.button>
     </div>
   );
 }
