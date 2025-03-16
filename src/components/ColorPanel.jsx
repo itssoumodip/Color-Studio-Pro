@@ -63,15 +63,13 @@ export default function ColorPanel({
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [tooltipColor, setTooltipColor] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Add this state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const wheelRef = useRef(null);
   
- 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(prev => !prev);
   };
   
-
   useEffect(() => {
     if (color) {
       const { h, s, l } = hexToHsl(color);
@@ -160,16 +158,6 @@ export default function ColorPanel({
 
   return (
     <div className="h-full flex flex-col">
-      <button
-        onClick={() => setShowPanel(false)}
-        className="fixed top-4 left-4 z-[9999] bg-white/90 dark:bg-gray-800/90 shadow-lg rounded-full p-3 lg:hidden"
-        aria-label="Go back"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
-        </svg>
-      </button>
-
       <div className="lg:hidden">
         <Navbar 
           setShowPanel={setShowPanel} 
