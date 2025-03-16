@@ -69,7 +69,6 @@ export default function ColorInfo({ color, showInfo, copyToClipboard }) {
   )
 }
 
-// Helper function to use within this component
 function generateShades(hex, count = 5) {
   const { r, g, b } = hexToRgb(hex)
   const shades = []

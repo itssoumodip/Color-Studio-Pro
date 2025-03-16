@@ -7,7 +7,6 @@ const ColorWheel = ({ color, onChange }) => {
   const [isDrawn, setIsDrawn] = useState(false);
   const [indicatorPosition, setIndicatorPosition] = useState({ x: 0, y: 0 });
 
-  // Draw the color wheel once on mount
   useEffect(() => {
     if (!canvasRef.current || isDrawn) return;
 
@@ -21,50 +20,40 @@ const ColorWheel = ({ color, onChange }) => {
 
     ctx.clearRect(0, 0, width, height);
 
-    // Create an image data object
     const imageData = ctx.createImageData(width, height);
     const data = imageData.data;
 
-    // More efficient drawing approach
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        // Get position relative to center
         const dx = x - centerX;
         const dy = y - centerY;
 
-        // Calculate distance from center and angle
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Skip pixels outside the wheel
         if (distance > radius) continue;
 
-        // Calculate angle (hue) and normalize distance (saturation)
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
         const hue = (angle + 360) % 360;
         const saturation = distance / radius;
 
-        // Convert HSL to RGB
+      
         const { r, g, b } = hslToRgb(hue, saturation, 0.5);
 
-        // Set pixel data
         const index = (y * width + x) * 4;
         data[index] = r;
         data[index + 1] = g;
         data[index + 2] = b;
-        data[index + 3] = 255; // Alpha channel (fully opaque)
+        data[index + 3] = 255; 
       }
     }
 
-    // Draw the image data to canvas
     ctx.putImageData(imageData, 0, 0);
     setIsDrawn(true);
   }, [isDrawn]);
 
-  // Add these event handlers to the canvas element
   useEffect(() => {
     const canvas = canvasRef.current;
     
-    // Prevent default touch behaviors to avoid page scrolling
     const preventDefaultTouch = (e) => {
       e.preventDefault();
     };
@@ -84,16 +73,14 @@ const ColorWheel = ({ color, onChange }) => {
     };
   }, []);
 
-  // Event handler for both mouse and touch interactions
   const handleInteraction = (e) => {
     if (!wheelRef.current) return;
-    e.preventDefault(); // Prevent scrolling on touch devices
+    e.preventDefault(); 
 
     const rect = wheelRef.current.getBoundingClientRect();
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    // Get cursor/touch position
     let clientX, clientY;
     if (e.type.includes('touch')) {
       clientX = e.touches[0].clientX;
@@ -103,40 +90,31 @@ const ColorWheel = ({ color, onChange }) => {
       clientY = e.clientY;
     }
 
-    // Calculate position relative to center of wheel
     const x = clientX - rect.left;
     const y = clientY - rect.top;
     
-    // Calculate offset from center
     const offsetX = x - centerX;
     const offsetY = y - centerY;
 
-    // Calculate polar coordinates
     const distance = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
     const maxDistance = Math.min(centerX, centerY);
     const angle = Math.atan2(offsetY, offsetX) * 180 / Math.PI;
 
-    // Clamp distance to wheel radius
     const clampedDistance = Math.min(distance, maxDistance);
     
-    // Convert to HSL
     const hue = (angle + 360) % 360;
     const saturation = Math.min(clampedDistance / maxDistance, 1);
 
-    // Convert HSL to hex
     const hex = hslToHex(hue, saturation, 0.5);
 
-    // Send color to parent
     onChange(hex);
 
-    // Update indicator position
     setIndicatorPosition({
       x: offsetX,
       y: offsetY
     });
   };
 
-  // Helper function to convert HSL to RGB
   const hslToRgb = (h, s, l) => {
     let r, g, b;
 
@@ -167,13 +145,11 @@ const ColorWheel = ({ color, onChange }) => {
     };
   };
 
-  // Helper function to convert HSL to hex
   const hslToHex = (h, s, l) => {
     const { r, g, b } = hslToRgb(h, s, l);
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   };
 
-  // Helper function to convert decimal to hex
   const toHex = (x) => {
     const hex = Math.round(x).toString(16);
     return hex.length === 1 ? '0' + hex : hex;

@@ -9,8 +9,8 @@ import ColorWheel from './components/ColorWheel';
 import { ColorInfoModal } from './components/ColorDisplay';
 
 function App() {
-  // State management
-  const [color, setColor] = useState("#6366f1") // Starting with indigo
+ 
+  const [color, setColor] = useState("#6366f1") 
   const [showPanel, setShowPanel] = useState(false)
   const [colorHistory, setColorHistory] = useState([])
   const [showInfo, setShowInfo] = useState(false)
@@ -20,7 +20,6 @@ function App() {
   const [activeTab, setActiveTab] = useState('colors')
   const [isDarkMode, setIsDarkMode] = useState(false)
   
-  // Extended color palette with modern colors
   const colors = [
     { name: "Indigo", hex: "#6366f1" },
     { name: "Cyan", hex: "#0ea5e9" },
@@ -36,7 +35,6 @@ function App() {
     { name: "Stone", hex: "#78716c" },
   ]
 
-  // Load saved favorites from localStorage
   useEffect(() => {
     const savedFavorites = localStorage.getItem('colorFavorites');
     if (savedFavorites) {
@@ -48,19 +46,15 @@ function App() {
       setColorHistory(JSON.parse(savedHistory));
     }
     
-    // Check system preference for dark mode
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setIsDarkMode(true);
     }
   }, []);
 
-  // Handle color change
   const handleColorChange = (newColor) => {
-    // Validate hex color
     if (/^#[0-9A-Fa-f]{6}$/i.test(newColor)) {
       setColor(newColor);
       
-      // Add to history if not already present
       if (!colorHistory.includes(newColor)) {
         const updatedHistory = [newColor, ...colorHistory.slice(0, 19)];
         setColorHistory(updatedHistory);
@@ -69,19 +63,16 @@ function App() {
     }
   }
   
-  // Calculate color properties
   const rgb = hexToRgb(color);
   const textColor = getContrastColor(color);
   const complementary = getComplementaryColor(color);
   
-  // Copy color to clipboard
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  // Toggle favorite
   const toggleFavorite = () => {
     let newFavorites;
     
@@ -95,7 +86,6 @@ function App() {
     localStorage.setItem('colorFavorites', JSON.stringify(newFavorites));
   }
 
-  // Toggle dark mode
   const toggleDarkMode = () => {
     setIsDarkMode(prev => !prev);
   }

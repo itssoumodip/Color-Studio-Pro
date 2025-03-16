@@ -11,7 +11,6 @@ export default function ColorDisplay({
   const [activeTab, setActiveTab] = useState('hex');
   const [isMobile, setIsMobile] = useState(false);
   
-  // Check if device is mobile
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -26,21 +25,18 @@ export default function ColorDisplay({
   if (viewMode === 'full') {
     return (
       <div className="h-full w-full relative flex flex-col justify-center items-center">
-        {/* Background color with gradient overlay */}
         <motion.div 
           className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/20"
           animate={{ backgroundColor: color }}
           transition={{ duration: 0.5 }}
         />
         
-        {/* Interactive color card */}
         <div className={`relative z-10 w-full max-w-lg mx-auto px-4 ${showInfo ? 'scale-95 opacity-80' : ''} transition-all duration-300`}>
           <motion.div 
             className="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl overflow-hidden border border-white/10"
             animate={{ backgroundColor: `${color}10` }}
             transition={{ duration: 0.3 }}
           >
-            {/* Color preview bar */}
             <div className="h-28 relative overflow-hidden">
               <motion.div 
                 className="absolute inset-0" 
@@ -54,9 +50,7 @@ export default function ColorDisplay({
               </div>
             </div>
             
-            {/* Color information section */}
             <div className="p-6 sm:p-8">
-              {/* Tabs */}
               <div className="flex mb-5 bg-white/10 rounded-full p-1">
                 <button
                   onClick={() => setActiveTab('hex')}
@@ -87,7 +81,6 @@ export default function ColorDisplay({
                 </button>
               </div>
               
-              {/* Color value */}
               <div className="mt-4 mb-6">
                 <AnimatePresence mode="wait">
                   {activeTab === 'hex' && (
@@ -173,7 +166,6 @@ export default function ColorDisplay({
                 </AnimatePresence>
               </div>
               
-              {/* RGB color components */}
               <div className="mb-6 grid grid-cols-3 gap-3">
                 <div className="bg-white/10 rounded-lg p-3">
                   <div className="text-xs opacity-60" style={{ color: textColor }}>Red</div>
@@ -198,7 +190,6 @@ export default function ColorDisplay({
                 </div>
               </div>
               
-              {/* Quick actions */}
               <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
                 <motion.button
                   whileTap={{ scale: 0.95 }}
@@ -234,7 +225,6 @@ export default function ColorDisplay({
           </motion.div>
         </div>
         
-        {/* Complementary color preview - updated for mobile */}
         <div className="absolute bottom-6 left-6 right-6 z-10">
           <div className="flex justify-center">
             <motion.div 
@@ -255,7 +245,6 @@ export default function ColorDisplay({
           </div>
         </div>
         
-        {/* Detailed color info modal */}
         <AnimatePresence>
           {showInfo && (
             <ColorInfoModal 
@@ -269,7 +258,6 @@ export default function ColorDisplay({
           )}
         </AnimatePresence>
         
-        {/* Copy notification */}
         <AnimatePresence>
           {copied && (
             <motion.div
@@ -342,7 +330,7 @@ export default function ColorDisplay({
   }
   
   if (viewMode === 'palette') {
-    // Generate color variants
+
     const shades = generateShades(color);
     
     return (
@@ -373,17 +361,25 @@ export default function ColorDisplay({
   return null;
 }
 
-// Color info modal component with modern design
+
 function ColorInfoModal({ color, complementary, rgb, textColor, setShowInfo, copyToClipboard }) {
   const complementTextColor = getContrastColor(complementary);
   const shades = generateShades(color);
-  const [isMobile, setIsMobile] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    console.log("isMobile state:", isMobile);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    
     return () => {
+      window.removeEventListener('resize', checkMobile);
       document.body.style.overflow = originalOverflow;
     };
   }, []);
@@ -418,7 +414,6 @@ function ColorInfoModal({ color, complementary, rgb, textColor, setShowInfo, cop
         <div className="p-6">
           <h2 className="text-xl font-bold mb-6" style={{ color: textColor }}>Color Details</h2>
           
-          {/* Color values */}
           <div className="space-y-4 mb-6">
             <div className="flex justify-between items-center">
               <div>
@@ -452,7 +447,6 @@ function ColorInfoModal({ color, complementary, rgb, textColor, setShowInfo, cop
             </div>
           </div>
           
-          {/* Complementary color section */}
           <div className="mb-6">
             <p className="text-xs font-medium opacity-60 mb-2" style={{ color: textColor }}>COMPLEMENTARY</p>
             <div className="flex items-center gap-3">
@@ -475,7 +469,6 @@ function ColorInfoModal({ color, complementary, rgb, textColor, setShowInfo, cop
             </div>
           </div>
           
-          {/* Color shades */}
           <div>
             <p className="text-xs font-medium opacity-60 mb-3" style={{ color: textColor }}>COLOR PALETTE</p>
             <div className="flex space-x-2">
@@ -495,25 +488,22 @@ function ColorInfoModal({ color, complementary, rgb, textColor, setShowInfo, cop
   );
 }
 
-// Helper functions
 function generateShades(hex, count = 5) {
   const { r, g, b } = hexToRgb(hex);
   const shades = [];
   
-  // Generate a lighter to darker gradient
   for (let i = 0; i < count; i++) {
-    // Calculate the mix factor (0 = white, 1 = original color, 2 = black)
     const factor = i / (count - 1) * 2;
     
     let newR, newG, newB;
     
     if (factor <= 1) {
-      // Mix with white for lighter shades
+
       newR = Math.round(255 - (255 - r) * factor);
       newG = Math.round(255 - (255 - g) * factor);
       newB = Math.round(255 - (255 - b) * factor);
     } else {
-      // Mix with black for darker shades
+  
       const darkFactor = factor - 1;
       newR = Math.round(r * (1 - darkFactor));
       newG = Math.round(g * (1 - darkFactor));
@@ -551,7 +541,7 @@ function rgbToHsl(r, g, b) {
   let h, s, l = (max + min) / 2;
   
   if (max === min) {
-    h = s = 0; // achromatic
+    h = s = 0; 
   } else {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);

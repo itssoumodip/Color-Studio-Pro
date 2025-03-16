@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ColorWheel from './ColorWheel';
 
-// Add this at the top of your file, above the ColorPanel component
 function Navbar({ setShowPanel, color, activeTab, setActiveTab }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
@@ -13,7 +12,6 @@ function Navbar({ setShowPanel, color, activeTab, setActiveTab }) {
                  
   return (
     <>
-      {/* Mobile menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div 
@@ -57,7 +55,7 @@ function Navbar({ setShowPanel, color, activeTab, setActiveTab }) {
 export default function ColorPanel({ 
   color, handleColorChange, colors, colorHistory, 
   favorites, setColor, activeTab, setActiveTab, isDarkMode,
-  setShowPanel // Add this prop
+  setShowPanel 
 }) {
   const [hue, setHue] = useState(0);
   const [saturation, setSaturation] = useState(100);
@@ -68,12 +66,12 @@ export default function ColorPanel({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Add this state
   const wheelRef = useRef(null);
   
-  // Toggle mobile menu
+ 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(prev => !prev);
   };
   
-  // Initialize color wheel with current color when opened
+
   useEffect(() => {
     if (color) {
       const { h, s, l } = hexToHsl(color);
@@ -83,7 +81,7 @@ export default function ColorPanel({
     }
   }, [color]);
   
-  // Close mobile menu on window resize
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768 && mobileMenuOpen) {
@@ -95,13 +93,11 @@ export default function ColorPanel({
     return () => window.removeEventListener('resize', handleResize);
   }, [mobileMenuOpen]);
 
-  // Convert hsl values to hex and update color
   const updateColorFromWheel = (h, s, l) => {
     const hex = hslToHex(h, s / 100, l / 100);
     handleColorChange(hex);
   };
 
-  // Handle mouse/touch interaction with color wheel
   const handleWheelInteraction = (e) => {
     if (!wheelRef.current) return;
     
@@ -109,7 +105,6 @@ export default function ColorPanel({
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
-    // Get position relative to center
     let clientX, clientY;
     
     if (e.type.includes('touch')) {
@@ -123,11 +118,9 @@ export default function ColorPanel({
     const x = clientX - rect.left - centerX;
     const y = clientY - rect.top - centerY;
     
-    // Calculate angle (hue) and distance from center (saturation)
     const angle = Math.atan2(y, x) * 180 / Math.PI;
     const distance = Math.min(Math.sqrt(x * x + y * y), centerX);
     
-    // Convert to color values
     const newHue = (angle + 360) % 360;
     const newSaturation = (distance / centerX) * 100;
     
@@ -136,7 +129,6 @@ export default function ColorPanel({
     updateColorFromWheel(newHue, newSaturation, lightness);
   };
 
-  // Show tooltip with color information
   const handleShowTooltip = (hex, e) => {
     setTooltipColor(hex);
     setTooltipPosition({ 
@@ -146,15 +138,12 @@ export default function ColorPanel({
     setShowTooltip(true);
   };
 
-  // Move the regenerateSuggestions function here, inside the component
   const regenerateSuggestions = () => {
-    // Generate new suggestions by slightly modifying the hue
     const newHue = (hue + Math.random() * 30 - 15 + 360) % 360;
     setHue(newHue);
     updateColorFromWheel(newHue, saturation, lightness);
   };
   
-  // Tab item for reuse
   const TabItem = ({ id, label, icon }) => (
     <button 
       onClick={() => setActiveTab(id)}
@@ -171,6 +160,16 @@ export default function ColorPanel({
 
   return (
     <div className="h-full flex flex-col">
+      <button
+        onClick={() => setShowPanel(false)}
+        className="fixed top-4 left-4 z-[9999] bg-white/90 dark:bg-gray-800/90 shadow-lg rounded-full p-3 lg:hidden"
+        aria-label="Go back"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+        </svg>
+      </button>
+
       <div className="lg:hidden">
         <Navbar 
           setShowPanel={setShowPanel} 
@@ -180,7 +179,6 @@ export default function ColorPanel({
         />
       </div>
       
-      {/* Mobile slide-out menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div 
@@ -244,7 +242,6 @@ export default function ColorPanel({
                 ))}
               </nav>
               
-              {/* Additional actions in mobile menu */}
               <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Actions</h4>
                 <div className="space-y-3">
@@ -277,7 +274,6 @@ export default function ColorPanel({
         )}
       </AnimatePresence>
       
-      {/* Header */}
       <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
           <span className="relative mr-2">
@@ -288,7 +284,6 @@ export default function ColorPanel({
         </h2>
         
 
-        {/* Color code input */}
         <div className="relative">
           <input 
             type="text" 
@@ -303,7 +298,7 @@ export default function ColorPanel({
         </div>
       </div>
       
-      {/* Tab navigation */}
+
       <div className="flex p-3 gap-1 bg-gray-100 dark:bg-gray-800/50">
         <TabItem 
           id="wheel" 
@@ -346,7 +341,6 @@ export default function ColorPanel({
       
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <AnimatePresence mode="wait">
-          {/* Color wheel tab */}
           {activeTab === 'wheel' && (
             <motion.div 
               key="wheel"
@@ -385,9 +379,8 @@ export default function ColorPanel({
                 </motion.div>
               </div>
 
-              {/* HSL controls and color suggestions */}
+             
               <div className="w-full max-w-md space-y-6">
-                {/* HSL values with modern cards */}
                 <div className="grid grid-cols-3 gap-3 w-full">
                   <motion.div 
                     whileHover={{ scale: 1.03 }}
@@ -422,9 +415,7 @@ export default function ColorPanel({
                         }}
                         className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 relative"
                       >
-                        {/* Horizontal line */}
                         <div className="absolute left-1 right-1 top-1/2 h-0.5 bg-current transform -translate-y-1/2"></div>
-                        {/* Vertical line */}
                         <div className="absolute top-1 bottom-1 left-1/2 w-0.5 bg-current transform -translate-x-1/2"></div>
                       </button>
                     </div>
@@ -511,7 +502,7 @@ export default function ColorPanel({
                   </motion.div>
                 </div>
 
-                {/* Lightness slider */}
+               
                 <div className="w-full max-w-md">
                   <div className="flex justify-between mb-2">
                     <label className="text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center">
@@ -526,7 +517,6 @@ export default function ColorPanel({
                   </div>
                   
                   <div className="h-6 relative w-full rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700">
-                    {/* Gradient background */}
                     <div
                       className="absolute inset-0"
                       style={{
@@ -538,7 +528,6 @@ export default function ColorPanel({
                       }}
                     ></div>
                     
-                    {/* Decorative tick marks */}
                     <div className="absolute inset-y-0 left-1/4 w-px h-full bg-white/20 pointer-events-none"></div>
                     <div className="absolute inset-y-0 left-1/2 w-px h-full bg-white/30 pointer-events-none"></div>
                     <div className="absolute inset-y-0 left-3/4 w-px h-full bg-white/20 pointer-events-none"></div>
@@ -557,7 +546,6 @@ export default function ColorPanel({
                       style={{ touchAction: 'none' }}
                     />
                     
-                    {/* Slider thumb */}  
                     <motion.div 
                       className="absolute w-6 h-6 rounded-full bg-white shadow-lg top-1/2 z-10 pointer-events-none flex items-center justify-center"
                       style={{ 
@@ -584,72 +572,11 @@ export default function ColorPanel({
                   </div>
                 </div>
 
-                {/* Suggestion colors based on current selection */}
-                <div className="w-full">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Suggestions</h3>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                      onClick={regenerateSuggestions}
-                    >
-                      Regenerate
-                    </motion.button>
-                  </div>
-
-                  <div className="grid grid-cols-5 gap-3">
-                    {[0.8, 0.6, 0.4, 0.2, 0.1].map((factor, index) => {
-                      const suggestedHex = hslToHex(hue, saturation / 100, factor);
-                      return (
-                        <motion.div
-                          key={factor}
-                          whileHover={{ 
-                            scale: 1.1, 
-                            y: -5,
-                            boxShadow: "0 12px 25px -5px rgba(0, 0, 0, 0.15)"
-                          }}
-                          className="relative"
-                        >
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setColor(suggestedHex)}
-                            onMouseEnter={(e) => handleShowTooltip(suggestedHex, e)}
-                            onMouseLeave={() => setShowTooltip(false)}
-                            className="w-full aspect-square rounded-xl shadow-md border-2 transition-all overflow-hidden relative"
-                            style={{ 
-                              backgroundColor: suggestedHex,
-                              borderColor: suggestedHex === color ? 'white' : 'transparent'
-                            }}
-                            aria-label={`Use suggested color ${index + 1}`}
-                          >
-                            {suggestedHex === color && (
-                              <motion.div 
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="absolute inset-0 flex items-center justify-center"
-                              >
-                                <div className="w-2 h-2 rounded-full bg-white/80"></div>
-                              </motion.div>
-                            )}
-                          </motion.button>
-                          <motion.div 
-                            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-900 text-[10px] px-1.5 py-0.5 rounded-full shadow-sm font-mono opacity-0 group-hover:opacity-100 transition-opacity"
-                            style={{ opacity: suggestedHex === color ? 0.7 : 0 }}
-                            animate={{ opacity: suggestedHex === color ? 0.7 : 0 }}
-                          >
-                            {Math.round(factor * 100)}%
-                          </motion.div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                </div>
+                
               </div>
             </motion.div>
           )}
           
-          {/* Preset colors tab */}
           {activeTab === 'colors' && (
             <motion.div
               key="colors"
@@ -682,7 +609,6 @@ export default function ColorPanel({
                 ))}
               </div>
               
-              {/* Color shades section */}
               <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 mt-8">Shades & Tints</h3>
               <div className="overflow-x-auto pb-4">
                 <div className="flex space-x-3 min-w-max">
@@ -711,7 +637,6 @@ export default function ColorPanel({
             </motion.div>
           )}
           
-          {/* History tab */}
           {activeTab === 'history' && (
             <motion.div
               key="history"
@@ -769,7 +694,6 @@ export default function ColorPanel({
             </motion.div>
           )}
           
-          {/* Favorites tab */}
           {activeTab === 'favorites' && (
             <motion.div
               key="favorites"
@@ -812,7 +736,7 @@ export default function ColorPanel({
                         }}
                       />
                       
-                      {/* Favorite heart icon */}
+                      
                       <motion.div 
                         whileHover={{ scale: 1.2 }}
                         className="absolute -top-2 -right-2 p-1 bg-white dark:bg-gray-800 rounded-full shadow-md"
@@ -845,7 +769,6 @@ export default function ColorPanel({
         </AnimatePresence>
       </div>
       
-      {/* Color tooltip */}
       <AnimatePresence>
         {showTooltip && (
           <motion.div 
@@ -867,26 +790,11 @@ export default function ColorPanel({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Add floating back button for mobile */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setShowPanel(false)}
-        className="fixed top-4 left-4 z-50 bg-white/90 dark:bg-gray-800/90 shadow-lg rounded-full p-3 lg:hidden"
-        aria-label="Go back"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
-        </svg>
-      </motion.button>
     </div>
   );
 }
 
-// Helper functions for color conversion
+
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? {
@@ -906,7 +814,7 @@ function rgbToHsl(r, g, b) {
   let h, s, l = (max + min) / 2;
   
   if (max === min) {
-    h = s = 0; // achromatic
+    h = s = 0; 
   } else {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
@@ -932,7 +840,7 @@ function hslToRgb(h, s, l) {
   let r, g, b;
 
   if (s === 0) {
-    r = g = b = l; // achromatic
+    r = g = b = l; 
   } else {
     const hue2rgb = (p, q, t) => {
       if (t < 0) t += 1;
@@ -969,12 +877,8 @@ function hslToHex(h, s, l) {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-// New helper function for Tailwind-style color shades
 function getTailwindShade(hexColor, shade) {
-  // Convert hex to hsl
   const { h, s, l } = hexToHsl(hexColor);
-  // Adjust lightness based on shade
   const newLightness = l * (shade / 1000);
-  // Convert back to hex
   return hslToHex(h, s, newLightness);
 }

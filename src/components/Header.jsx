@@ -3,10 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getContrastColor } from '../utils/colorUtils';
 
 export default function Header({ color, textColor, viewMode, setViewMode, isDarkMode, toggleDarkMode }) {
-  // Add state for mobile menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  // Toggle mobile menu function
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(prev => !prev);
   };
@@ -56,7 +54,6 @@ export default function Header({ color, textColor, viewMode, setViewMode, isDark
         </div>
         
         <div className="flex items-center gap-4">
-          {/* View mode switcher - improved visibility */}
           <div className="hidden sm:flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1.5 shadow-inner">
             <motion.button 
               onClick={() => setViewMode('full')} 
@@ -98,7 +95,6 @@ export default function Header({ color, textColor, viewMode, setViewMode, isDark
             </motion.button>
           </div>
           
-          {/* Mobile menu button - now with functionality */}
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
@@ -127,7 +123,6 @@ export default function Header({ color, textColor, viewMode, setViewMode, isDark
         </div>
       </motion.header>
       
-      {/* Mobile menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -138,7 +133,6 @@ export default function Header({ color, textColor, viewMode, setViewMode, isDark
             className="sm:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 overflow-hidden"
           >
             <div className="p-4 space-y-4">
-              {/* View mode buttons for mobile */}
               <div className="space-y-2">
                 <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">View Mode</h3>
                 <div className="grid grid-cols-3 gap-2">
